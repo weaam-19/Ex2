@@ -89,6 +89,7 @@ public class Ex2Test {
             cell.setOrder(2);
             assertEquals(2, cell.getOrder());
         }
+
     }
 
 

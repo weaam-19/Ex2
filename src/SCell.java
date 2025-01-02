@@ -9,7 +9,6 @@ public class SCell implements Cell {
         public static final int FORM = 3;
         public static final int ERR_CYCLE_FORM = -1;
         public static final int ERR_WRONG_FORM = -2;
-
         public SCell(String data) {
             this.data = data;
             this.type = determineType(data);
@@ -95,13 +94,13 @@ public class SCell implements Cell {
                 return String.valueOf(result);
             } catch (Exception e) {
                 type = ERR_WRONG_FORM;
-                return "ERR_Form";
+                return "ERR";
             }
         }
         if (type == TEXT) {
             return data;
         }
-        return "ERR_Form";
+        return "ERR";
     }
 
 
@@ -134,11 +133,15 @@ public class SCell implements Cell {
                 String cell = cellName.toString().toUpperCase();
                 int[] coords = sheet.parseEntry(cell);
                 if (coords == null || (coords[0] == currentX && coords[1] == currentY)) {
-                    throw new IllegalArgumentException("Invalid or circular reference: " + cell);
+                    throw new IllegalArgumentException(" " + cell);
                 }
 
                 SCell referencedCell = sheet.get(coords[0], coords[1]);
                 String cellValue = (referencedCell != null) ? referencedCell.evaluate(sheet, coords[0], coords[1]) : "0";
+
+                if (!Cell2222.isNumber(cellValue)) {
+                    throw new IllegalArgumentException(" " + cell);
+                }
 
                 result.append(cellValue);
             } else {
@@ -149,6 +152,7 @@ public class SCell implements Cell {
 
         return result.toString();
     }
+
 
 
 
@@ -172,45 +176,46 @@ public class SCell implements Cell {
         }
 
 
-        private static double evaluateWithoutParentheses(String expression) {
-            LinkedList<Double> numbers = new LinkedList<>();
-            LinkedList<Character> operators = new LinkedList<>();
-            StringBuilder currentNumber = new StringBuilder();
+    private static double evaluateWithoutParentheses(String expression) {
+        LinkedList<Double> numbers = new LinkedList<>();
+        LinkedList<Character> operators = new LinkedList<>();
+        StringBuilder currentNumber = new StringBuilder();
 
-            for (int i = 0; i <= expression.length(); i++) {
-                char c = (i < expression.length()) ? expression.charAt(i) : '\0';
+        for (int i = 0; i <= expression.length(); i++) {
+            char c = (i < expression.length()) ? expression.charAt(i) : '\0';
 
-                if (Character.isDigit(c) || c == '.') {
-                    currentNumber.append(c);
-                } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '\0') {
-                    if (currentNumber.length() > 0) {
-                        numbers.add(Double.parseDouble(currentNumber.toString()));
-                        currentNumber.setLength(0);
-                    }
-                    while (!operators.isEmpty() && precedence(operators.getLast()) >= precedence(c)) {
-                        double b = numbers.removeLast();
-                        double a = numbers.removeLast();
-                        char op = operators.removeLast();
-                        numbers.add(applyOperator(a, op, b));
-                    }
-                    if (c != '\0') operators.add(c);
-                } else {
-                    throw new IllegalArgumentException("" + c);
+            if (Character.isDigit(c) || c == '.' || (c == '-' && (i == 0 || !Character.isDigit(expression.charAt(i - 1))))) {
+                currentNumber.append(c);
+            } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '\0') {
+                if (currentNumber.length() > 0) {
+                    numbers.add(Double.parseDouble(currentNumber.toString()));
+                    currentNumber.setLength(0);
                 }
+                while (!operators.isEmpty() && precedence(operators.getLast()) >= precedence(c)) {
+                    double b = numbers.removeLast();
+                    double a = numbers.removeLast();
+                    char op = operators.removeLast();
+                    numbers.add(applyOperator(a, op, b));
+                }
+                if (c != '\0') operators.add(c);
+            } else {
+                throw new IllegalArgumentException("" + c);
             }
-
-            while (!operators.isEmpty()) {
-                double b = numbers.removeLast();
-                double a = numbers.removeLast();
-                char op = operators.removeLast();
-                numbers.add(applyOperator(a, op, b));
-            }
-
-            return numbers.getLast();
         }
 
+        while (!operators.isEmpty()) {
+            double b = numbers.removeLast();
+            double a = numbers.removeLast();
+            char op = operators.removeLast();
+            numbers.add(applyOperator(a, op, b));
+        }
 
-        private static int precedence(char operator) {
+        return numbers.getLast();
+    }
+
+
+
+    private static int precedence(char operator) {
             if (operator == '+' || operator == '-') return 1;
             if (operator == '*' || operator == '/') return 2;
             return -1;

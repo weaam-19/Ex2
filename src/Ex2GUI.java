@@ -1,3 +1,4 @@
+
 import java.awt.*;
 import java.io.IOException;
 
@@ -21,7 +22,7 @@ public class Ex2GUI {
 
 	/** The main function for running Ex2 */
 	public static void main(String[] a) {
-		table = new Ex2Sheet(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
+		table  = new Ex2Sheet(Ex2Utils.WIDTH ,Ex2Utils.HEIGHT);
 		testSimpleGUI(table);
 	}
 

@@ -1,15 +1,56 @@
 // Add your documentation below:
 
-public class CellEntry  implements Index2D {
+public class CellEntry implements Index2D {
+    private String index; // המחרוזת שמייצגת את התא (למשל "B3")
 
-    @Override
-    public boolean isValid() {
-        return false;
+    public CellEntry(String index) {
+        this.index = index;
     }
 
     @Override
-    public int getX() {return Ex2Utils.ERR;}
+    public boolean isValid() {
+        if (index == null || index.isEmpty()) {
+            return false;
+        }
+        char column = index.toUpperCase().charAt(0);
+        String rowPart = index.substring(1);
+
+        // בדיקה שהעמודה היא אות באנגלית והשורה היא מספר תקין
+        if (!Character.isLetter(column) || !rowPart.matches("\\d+")) {
+            return false;
+        }
+
+        int row;
+        try {
+            row = Integer.parseInt(rowPart);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        return column >= 'A' && column <= 'Z' && row >= 1 && row <= 99;
+    }
 
     @Override
-    public int getY() {return Ex2Utils.ERR;}
+    public int getX() {
+        if (!isValid()) {
+            throw new IllegalStateException("Invalid index: " + index);
+        }
+        return index.toUpperCase().charAt(0) - 'A';
+    }
+
+    @Override
+    public int getY() {
+        if (!isValid()) {
+            throw new IllegalStateException("Invalid index: " + index);
+        }
+        return Integer.parseInt(index.substring(1)) - 1;
+    }
+
+    @Override
+    public String toString() {
+        if (!isValid()) {
+            return "Invalid Index";
+        }
+        return index.toUpperCase();
+    }
 }

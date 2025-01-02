@@ -1,11 +1,12 @@
 // Add your documentation below:
 
 public class CellEntry implements Index2D {
-    private String index; // המחרוזת שמייצגת את התא (למשל "B3")
+    private String index;
 
     public CellEntry(String index) {
         this.index = index;
     }
+
 
     @Override
     public boolean isValid() {
@@ -15,7 +16,6 @@ public class CellEntry implements Index2D {
         char column = index.toUpperCase().charAt(0);
         String rowPart = index.substring(1);
 
-        // בדיקה שהעמודה היא אות באנגלית והשורה היא מספר תקין
         if (!Character.isLetter(column) || !rowPart.matches("\\d+")) {
             return false;
         }
@@ -30,26 +30,32 @@ public class CellEntry implements Index2D {
         return column >= 'A' && column <= 'Z' && row >= 1 && row <= 99;
     }
 
+
+
     @Override
     public int getX() {
         if (!isValid()) {
-            throw new IllegalStateException("Invalid index: " + index);
+            throw new IllegalStateException("" + index);
         }
         return index.toUpperCase().charAt(0) - 'A';
     }
 
+
+
     @Override
     public int getY() {
         if (!isValid()) {
-            throw new IllegalStateException("Invalid index: " + index);
+            throw new IllegalStateException("" + index);
         }
         return Integer.parseInt(index.substring(1)) - 1;
     }
 
+
+
     @Override
     public String toString() {
         if (!isValid()) {
-            return "Invalid Index";
+            return "";
         }
         return index.toUpperCase();
     }

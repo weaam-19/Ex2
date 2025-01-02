@@ -76,12 +76,6 @@ public class Cell2222 {
         return openParentheses == 0 && !lastCharWasOperator;
     }
 
-
-
-
-
-
-
     public static double computeForm(String input) {
         if (input == null || input.length() < 2 || input.charAt(0) != '=') {
             throw new IllegalArgumentException("Invalid formula. Formula must start with '='.");
@@ -95,7 +89,7 @@ public class Cell2222 {
             int openIndex = expression.lastIndexOf('(');
             int closeIndex = expression.indexOf(')', openIndex);
             if (closeIndex == -1) {
-                throw new IllegalArgumentException("Mismatched parentheses.");
+                throw new IllegalArgumentException("");
             }
             double innerResult = evaluate(expression.substring(openIndex + 1, closeIndex));
             return evaluate(expression.substring(0, openIndex) + innerResult + expression.substring(closeIndex + 1));

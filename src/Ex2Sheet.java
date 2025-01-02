@@ -19,24 +19,29 @@ public class Ex2Sheet implements Sheet {
         }
     }
 
+
     public Ex2Sheet() {
         this(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
     }
+
 
     @Override
     public boolean isIn(int x, int y) {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
 
+
     @Override
     public int width() {
         return width;
     }
 
+
     @Override
     public int height() {
         return height;
     }
+
 
     @Override
     public void set(int x, int y, String c) {
@@ -45,6 +50,7 @@ public class Ex2Sheet implements Sheet {
         }
     }
 
+
     @Override
     public SCell get(int x, int y) {
         if (isIn(x, y)) {
@@ -52,6 +58,7 @@ public class Ex2Sheet implements Sheet {
         }
         return null;
     }
+
 
     @Override
     public SCell get(String entry) {
@@ -62,18 +69,23 @@ public class Ex2Sheet implements Sheet {
         return null;
     }
 
+
+
     @Override
     public String value(int x, int y) {
         if (isIn(x, y)) {
-            return table[x][y].evaluate();
+            return table[x][y].evaluate(this, x, y);
         }
-        return "ERR";
+        return "ERR_Cycle";
     }
+
+
 
     @Override
     public String eval(int x, int y) {
         return value(x, y);
     }
+
 
     @Override
     public void eval() {
@@ -83,6 +95,7 @@ public class Ex2Sheet implements Sheet {
             }
         }
     }
+
 
     @Override
     public int[][] depth() {
@@ -95,18 +108,20 @@ public class Ex2Sheet implements Sheet {
         return depths;
     }
 
+
     private int computeDepth(int x, int y, boolean[][] visited) {
         if (!isIn(x, y)) {
             return -1;
         }
         if (visited[x][y]) {
-            return -1; // מעגל תלות
+            return -1;
         }
         visited[x][y] = true;
         SCell cell = table[x][y];
         if (cell.getType() != SCell.FORM) {
             return 0;
         }
+
 
         String formula = cell.getData().substring(1);
         int maxDepth = 0;
@@ -121,28 +136,39 @@ public class Ex2Sheet implements Sheet {
         return maxDepth;
     }
 
+
     private String[] parseReferences(String formula) {
         return formula.split("[^A-Za-z0-9]");
     }
 
-    private int[] parseEntry(String entry) {
+
+
+    public int[] parseEntry(String entry) {
         if (entry == null || entry.length() < 2) {
             return null;
         }
-        char column = entry.toUpperCase().charAt(0);
-        int row;
+
+        char column = Character.toUpperCase(entry.charAt(0));
+        String rowPart = entry.substring(1);
+
         try {
-            row = Integer.parseInt(entry.substring(1)) - 1;
+            int row = Integer.parseInt(rowPart);
+            int col = column - 'A';
+            if (col < 0 || col >= width || row < 0 || row >= height) {
+                return null;
+            }
+            return new int[]{col, row};
         } catch (NumberFormatException e) {
             return null;
         }
-        return new int[]{column - 'A', row};
     }
+
+
 
     @Override
     public void save(String fileName) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
-            writer.write("I2CS ArielU: SpreadSheet (Ex2) assignment\n");
+            writer.write("\n");
             for (int i = 0; i < width; i++) {
                 for (int j = 0; j < height; j++) {
                     String data = table[i][j].getData();
@@ -153,6 +179,7 @@ public class Ex2Sheet implements Sheet {
             }
         }
     }
+
 
     @Override
     public void load(String fileName) throws IOException {
@@ -168,7 +195,6 @@ public class Ex2Sheet implements Sheet {
                         String data = parts[2];
                         set(x, y, data);
                     } catch (NumberFormatException e) {
-                        // Ignore invalid lines
                     }
                 }
             }

@@ -1,4 +1,6 @@
 import java.util.LinkedList;
+import java.util.Scanner;
+import java.util.Set;
 
 public class SCell implements Cell {
         private String data;
@@ -84,37 +86,46 @@ public class SCell implements Cell {
 
 
 
-    public String evaluate(Ex2Sheet sheet, int currentX, int currentY) {
+    public String evaluate(Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
         if (type == NUMBER) {
             return data;
         }
         if (type == FORM) {
+            String currentCell = String.valueOf((char) ('A' + currentX)) + (currentY + 1);
+            if (visited.contains(currentCell)) {
+                type = ERR_CYCLE_FORM;
+                return "ERR_Cycle";
+            }
+            visited.add(currentCell);
             try {
-                double result = computeForm(data, sheet, currentX, currentY);
+                double result = computeForm(data, sheet, currentX, currentY, visited);
+                visited.remove(currentCell);
                 return String.valueOf(result);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
                 type = ERR_WRONG_FORM;
-                return "ERR";
+                return "ERR_FORM";
             }
         }
         if (type == TEXT) {
             return data;
         }
-        return "ERR";
+        return "ERR!";
     }
 
 
-    private static double computeForm(String input, Ex2Sheet sheet, int currentX, int currentY) {
+
+    private static double computeForm(String input, Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
         if (input == null || !input.startsWith("=")) {
             throw new IllegalArgumentException("");
         }
         String formula = input.substring(1).replaceAll("\\s", "");
-        formula = replaceReferencesWithValues(formula, sheet, currentX, currentY);
+        formula = replaceReferencesWithValues(formula, sheet, currentX, currentY, visited);
         return evaluateExpression(formula);
     }
 
 
-    private static String replaceReferencesWithValues(String formula, Ex2Sheet sheet, int currentX, int currentY) {
+
+    private static String replaceReferencesWithValues(String formula, Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
         StringBuilder result = new StringBuilder();
         int i = 0;
 
@@ -137,11 +148,9 @@ public class SCell implements Cell {
                 }
 
                 SCell referencedCell = sheet.get(coords[0], coords[1]);
-                String cellValue = (referencedCell != null) ? referencedCell.evaluate(sheet, coords[0], coords[1]) : "0";
-
-                if (!Cell2222.isNumber(cellValue)) {
-                    throw new IllegalArgumentException(" " + cell);
-                }
+                String cellValue = (referencedCell != null)
+                        ? referencedCell.evaluate(sheet, coords[0], coords[1], visited)
+                        : "0";
 
                 result.append(cellValue);
             } else {

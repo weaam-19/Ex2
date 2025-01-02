@@ -37,6 +37,7 @@ public class Cell2222 {
             return false;
         }
 
+
         int openParentheses = 0;
         boolean lastCharWasOperator = true;
 

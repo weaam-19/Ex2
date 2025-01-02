@@ -2,6 +2,7 @@ import java.io.IOException;
 // Add your documentation below:
 
 import java.io.*;
+import java.util.HashSet;
 
 public class Ex2Sheet implements Sheet {
     private SCell[][] table;
@@ -74,10 +75,11 @@ public class Ex2Sheet implements Sheet {
     @Override
     public String value(int x, int y) {
         if (isIn(x, y)) {
-            return table[x][y].evaluate(this, x, y);
+            return table[x][y].evaluate(this, x, y, new HashSet<>());
         }
         return "ERR_Cycle";
     }
+
 
 
 

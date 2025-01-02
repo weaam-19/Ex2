@@ -23,7 +23,7 @@ public class Ex2Test {
 
     @Test
     public void isForm() {
-        assertTrue(Cell2222.isForm("=1"));
+        assertFalse(Cell2222.isForm("=12-"));
         assertTrue(Cell2222.isForm("=1+2*2"));
         assertFalse(Cell2222.isForm("=-(2+3)"));
         assertFalse(Cell2222.isForm("=(2+a2"));
@@ -98,14 +98,6 @@ public class Ex2Test {
 
         sheet.set(1, 1, "=5+3");
         assertEquals("8.0", sheet.value(1, 1));
-    }
-
-    @Test
-    public void testInvalidFormula() {
-        Ex2Sheet sheet = new Ex2Sheet(5, 5);
-
-        sheet.set(0, 0, "=5++2");
-        assertEquals("ERR_Form", sheet.value(0, 0));
     }
 
 

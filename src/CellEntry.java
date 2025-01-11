@@ -6,56 +6,51 @@ public class CellEntry implements Index2D {
         this.index = index;
     }
 
-
     @Override
     public boolean isValid() {
-        if (index == null || index.isEmpty()) {
-            return false;
-        }
-        char column = index.toUpperCase().charAt(0);
+        if (index == null || index.isBlank()) return false;
+
+        char column = Character.toUpperCase(index.charAt(0));
         String rowPart = index.substring(1);
 
-        if (!Character.isLetter(column) || !rowPart.matches("\\d+")) {
-            return false;
-        }
+        return Character.isLetter(column) && rowPart.matches("\\d+") && isRow(rowPart) && columnInRange(column);
+    }
 
+    private boolean isRow(String rowPart) {
         int row;
         try {
             row = Integer.parseInt(rowPart);
         } catch (NumberFormatException e) {
             return false;
         }
-
-        return column >= 'A' && column <= 'Z' && row >= 1 && row <= 99;
+        return row >= 1 && row <= 99;
     }
 
-
+    private boolean columnInRange(char column) {
+        return column >= 'A' && column <= 'Z';
+    }
 
     @Override
     public int getX() {
-        if (!isValid()) {
-            throw new IllegalStateException("" + index);
-        }
-        return index.toUpperCase().charAt(0) - 'A';
+        validIndex();
+        return Character.toUpperCase(index.charAt(0)) - 'A';
     }
-
-
 
     @Override
     public int getY() {
-        if (!isValid()) {
-            throw new IllegalStateException("" + index);
-        }
+        validIndex();
         return Integer.parseInt(index.substring(1)) - 1;
     }
 
-
+    private void validIndex() {
+        if (!isValid()) {
+            throw new IllegalStateException(" " + index);
+        }
+    }
 
     @Override
     public String toString() {
-        if (!isValid()) {
-            return "";
-        }
-        return index.toUpperCase();
+        return isValid() ? index.toUpperCase() : "";
     }
+
 }

@@ -1,43 +1,9 @@
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class Ex2Test {
-
-    @Test
-    public void testIsNumber_withValidNumbers() {
-        assertTrue(Cell2222.isNumber("123"));
-        assertTrue(Cell2222.isNumber("123.456"));
-        assertTrue(Cell2222.isNumber("1.0e10"));
-        assertFalse(Cell2222.isNumber("Aw12"));
-        assertFalse(Cell2222.isNumber("12b12"));
-    }
-    @Test
-    public void testIsText_withValidText() {
-        assertTrue(Cell2222.isText("abc"));
-        assertTrue(Cell2222.isText("hello"));
-        assertTrue(Cell2222.isText(null));
-        assertFalse(Cell2222.isText("100"));
-        assertFalse(Cell2222.isText("10000.333"));
-    }
-
-    @Test
-    public void isForm() {
-        assertFalse(Cell2222.isForm("=12-"));
-        assertTrue(Cell2222.isForm("=1+2*2"));
-        assertFalse(Cell2222.isForm("=-(2+3)"));
-        assertFalse(Cell2222.isForm("=(2+a2"));
-        assertFalse(Cell2222.isForm("=12-2)"));
-    }
-    @Test
-    public void computeForm(){
-        assertEquals(5.0, Cell2222.computeForm("=(5 + 5)/ 2"));
-        assertEquals(5.0, Cell2222.computeForm("=(2+3)*1"));
-        assertEquals(7.5, Cell2222.computeForm("=(5 + 10)/ 2"));
-        assertEquals(10.0, Cell2222.computeForm("=(10*100)/100"));
-        assertNotEquals(100, Cell2222.computeForm("=(100*1)-10"));
-    }
-
 
         @Test
         void testSetAndGetData() {
@@ -109,7 +75,7 @@ public class Ex2Test {
         sheet.set(0, 0, "5");
 
         sheet.set(0, 1, "=A0+3");
-        assertEquals("8.0", sheet.value(0, 1));
+        assertEquals("8.0", sheet.value(0,1 ));
 
         sheet.set(0, 0, "10");
         assertEquals("13.0", sheet.value(0, 1));
@@ -170,8 +136,138 @@ public class Ex2Test {
         assertEquals(cell1.getY(), cell2.getY());
     }
 
+    @Nested
+    class Ex2SheetTest {
 
+        @Test
+        void testSetAndGet() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            sheet.set(0, 0, "10");
+            assertEquals("10", sheet.get(0, 0).getData());
+        }
+
+        @Test
+        void testValueForNumber() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            sheet.set(0, 0, "25");
+            assertEquals("25", sheet.value(0, 0));
+        }
+
+        @Test
+        void testValueForFormula() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            sheet.set(0, 0, "10");
+            sheet.set(1, 0, "=A0+5");
+            assertEquals("15.0", sheet.value(1, 0));
+        }
+
+        @Test
+        void testInvalidFormula() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            sheet.set(0, 0, "=10+");
+            assertEquals("ERR_FORM!!!", sheet.value(0, 0));
+        }
+        @Test
+        void testDepthCalculation() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            sheet.set(0, 0, "10");
+            sheet.set(1, 0, "=A0+5");
+            sheet.set(2, 0, "=B0*2");
+            int[][] depths = sheet.depth();
+            assertEquals(0, depths[0][0]);
+            assertEquals(1, depths[1][0]);
+            assertEquals(2, depths[2][0]);
+        }
+
+        @Test
+        void testInvalidReference() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            sheet.set(0, 0, "=Z100");
+            assertEquals("ERR_FORM!!!", sheet.value(0, 0));
+        }
+
+        @Test
+        void testEmptyCell() {
+            Ex2Sheet sheet = new Ex2Sheet(10, 10);
+            assertEquals("", sheet.value(0, 0));
+        }
     }
+
+    @Nested
+    class CellEntryTest {
+
+        @Test
+        void testValidCell() {
+            CellEntry cell = new CellEntry("A1");
+            assertTrue(cell.isValid());
+            assertEquals(0, cell.getX());
+            assertEquals(0, cell.getY());
+        }
+
+        @Test
+        void testInvalidCellNull() {
+            CellEntry cell = new CellEntry(null);
+            assertFalse(cell.isValid());
+            assertThrows(IllegalStateException.class, cell::getX);
+            assertThrows(IllegalStateException.class, cell::getY);
+        }
+
+        @Test
+        void testInvalidCellEmpty() {
+            CellEntry cell = new CellEntry("");
+            assertFalse(cell.isValid());
+            assertThrows(IllegalStateException.class, cell::getX);
+            assertThrows(IllegalStateException.class, cell::getY);
+        }
+
+        @Test
+        void testInvalidCellNoLetter() {
+            CellEntry cell = new CellEntry("12");
+            assertFalse(cell.isValid());
+            assertThrows(IllegalStateException.class, cell::getX);
+            assertThrows(IllegalStateException.class, cell::getY);
+        }
+
+        @Test
+        void testInvalidCellOutOfRangeRow() {
+            CellEntry cell = new CellEntry("A100");
+            assertFalse(cell.isValid());
+            assertThrows(IllegalStateException.class, cell::getX);
+            assertThrows(IllegalStateException.class, cell::getY);
+        }
+
+        @Test
+        void testInvalidCellOutOfRangeColumn() {
+            CellEntry cell = new CellEntry("AA1");
+            assertFalse(cell.isValid());
+            assertThrows(IllegalStateException.class, cell::getX);
+            assertThrows(IllegalStateException.class, cell::getY);
+        }
+
+        @Test
+        void testValidCellWithLowercase() {
+            CellEntry cell = new CellEntry("b3");
+            assertTrue(cell.isValid());
+            assertEquals(1, cell.getX());
+            assertEquals(2, cell.getY());
+        }
+
+        @Test
+        void testToStringValidCell() {
+            CellEntry cell = new CellEntry("c5");
+            assertEquals("C5", cell.toString());
+        }
+
+        @Test
+        void testToStringInvalidCell() {
+            CellEntry cell = new CellEntry("Z123");
+            assertEquals("", cell.toString());
+        }
+    }
+
+
+
+}
 
 
 

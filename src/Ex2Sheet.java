@@ -77,7 +77,7 @@ public class Ex2Sheet implements Sheet {
         if (isIn(x, y)) {
             return table[x][y].evaluate(this, x, y, new HashSet<>());
         }
-        return "ERR_Cycle";
+        return "ERR_Cycle!!!";
     }
 
 
@@ -128,7 +128,7 @@ public class Ex2Sheet implements Sheet {
         String formula = cell.getData().substring(1);
         int maxDepth = 0;
 
-        for (String ref : parseReferences(formula)) {
+        for (String ref : parse(formula)) {
             int[] coords = parseEntry(ref);
             if (coords != null) {
                 maxDepth = Math.max(maxDepth, 1 + computeDepth(coords[0], coords[1], visited));
@@ -139,7 +139,7 @@ public class Ex2Sheet implements Sheet {
     }
 
 
-    private String[] parseReferences(String formula) {
+    private String[] parse(String formula) {
         return formula.split("[^A-Za-z0-9]");
     }
 
@@ -186,7 +186,7 @@ public class Ex2Sheet implements Sheet {
     @Override
     public void load(String fileName) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            reader.readLine(); // Skip header
+            reader.readLine();
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",", 3);

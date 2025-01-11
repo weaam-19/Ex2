@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -6,6 +7,7 @@ public class SCell implements Cell {
     private String data;
     private int type;
     private int order;
+
     public static final int TEXT = 1;
     public static final int NUMBER = 2;
     public static final int FORM = 3;
@@ -50,89 +52,107 @@ public class SCell implements Cell {
     }
 
     private int determineType(String data) {
-        if (data == null || data.isEmpty()) {
+        if (data == null || data.isBlank()) {
             return TEXT;
         }
         if (isNumber(data)) {
             return NUMBER;
         }
-        if (isValidFormula(data)) {
-            return FORM;
-        }
         if (data.startsWith("=")) {
-            return ERR_WRONG_FORM;
+            return isForm(data) ? FORM : ERR_WRONG_FORM;
         }
         return TEXT;
     }
 
-    private boolean isNumber(String s) {
+    private boolean isNumber(String value) {
         try {
-            Double.parseDouble(s);
+            Double.parseDouble(value);
             return true;
         } catch (NumberFormatException e) {
             return false;
         }
     }
+    private String getCellName(int x, int y) {
+        String  cellName = String.valueOf((char) ('A' + x)) + (y);
+        System.out.println("Converting coordinates [" + x + "," + y + "] to cell name: " + cellName);
+        return  cellName;
 
-    private boolean isValidFormula(String formula) {
+    }
+
+
+    private boolean isForm(String formula) {
         if (formula == null || !formula.startsWith("=")) {
             return false;
         }
 
         String expression = formula.substring(1).trim();
 
-        if (expression.isEmpty()) {
+        if (expression.isEmpty() || "+-*/".contains(String.valueOf(expression.charAt(expression.length() - 1)))) {
             return false;
         }
 
-        if ("+-*/".contains(String.valueOf(expression.charAt(expression.length() - 1)))) {
-            return false;
+        if (expression.matches("[A-Za-z]\\d+")) {
+            return true;
         }
+
         return true;
-
-
     }
 
     public String evaluate(Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
-        if (type == NUMBER) {
-            return data;
+        if (type == ERR_CYCLE_FORM) {
+            return "ERR_CYCLE!!!";
         }
-        if (type == FORM) {
-            String currentCell = String.valueOf((char) ('A' + currentX)) + (currentY + 1);
-
-            if (visited.contains(currentCell)) {
-                type = ERR_CYCLE_FORM;
-                return "ERR_Cycle";
-            }
-            visited.add(currentCell);
-            try {
-                double result = computeForm(data, sheet, currentX, currentY, visited);
-                visited.remove(currentCell);
-                return String.valueOf(result);
-            } catch (ArithmeticException e) {
-                type = ERR_WRONG_FORM;
-                return "ERR_FORM (Division by zero)";
-            } catch (IllegalArgumentException e) {
-                type = ERR_WRONG_FORM;
-                return "ERR_FORM";
-            }
-        }
-        if (type == TEXT) {
-            return data;
-        }
-        return "ERR_FORM!";
+        return switch (type) {
+            case NUMBER -> data;
+            case TEXT -> data;
+            case FORM -> evaluateFormula(sheet, currentX, currentY, visited);
+            case ERR_WRONG_FORM -> "ERR_FORM!!!";
+            default -> "ERR_FORM!!!";
+        };
     }
 
-    private static double computeForm(String input, Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
-        if (input == null || !input.startsWith("=")) {
+    private String evaluateFormula(Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
+        String currentCell = getCellName(currentX, currentY);
+
+        if (visited.contains(currentCell)) {
+            this.type = ERR_CYCLE_FORM;
+            return "ERR_CYCLE!!!";
+        }
+
+        visited.add(currentCell);
+
+        try {
+            double result = computeFormula(data, sheet, currentX, currentY, visited);
+            visited.remove(currentCell);
+            return String.valueOf(result);
+        } catch (ArithmeticException e) {
+            this.type = ERR_WRONG_FORM;
+            visited.remove(currentCell);
+            return "ERR_FORM (Division by zero)";
+        } catch (IllegalArgumentException e) {
+            visited.remove(currentCell);
+            if (e.getMessage() != null && e.getMessage().contains("cycle")) {
+                this.type = ERR_CYCLE_FORM;
+                return "ERR_CYCLE!!!";
+            }
+            this.type = ERR_WRONG_FORM;
+            return "ERR_FORM!!!";
+        }
+    }
+
+
+    private static double computeFormula(String formula, Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
+        if (formula == null || !formula.startsWith("=")) {
             throw new IllegalArgumentException("");
         }
-        String formula = input.substring(1).replaceAll("\\s", "");
-        formula = replaceReferencesWithValues(formula, sheet, currentX, currentY, visited);
-        return evaluateExpression(formula);
+
+        String expression = formula.substring(1).replaceAll("\\s", "");
+        expression = replaceRefWithValues(expression, sheet, currentX, currentY, visited);
+
+        return evaluateExpression(expression);
     }
 
-    private static String replaceReferencesWithValues(String formula, Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
+    private static String replaceRefWithValues(String formula, Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
         StringBuilder result = new StringBuilder();
         int i = 0;
 
@@ -140,29 +160,29 @@ public class SCell implements Cell {
             char c = formula.charAt(i);
 
             if (Character.isLetter(c)) {
-                StringBuilder cellName = new StringBuilder();
-                cellName.append(c);
-                i++;
-                while (i < formula.length() && Character.isDigit(formula.charAt(i))) {
-                    cellName.append(formula.charAt(i));
-                    i++;
-                }
-
-                String cell = cellName.toString().toUpperCase();
-                int[] coords = sheet.parseEntry(cell);
+                String cellName = extractCellName(formula, i);
+                int[] coords = sheet.parseEntry(cellName);
 
                 if (coords == null) {
-                    throw new IllegalArgumentException("Invalid reference: " + cell);
+                    throw new IllegalArgumentException(" " + cellName);
+                }
+
+                // בדיקת הפניה עצמית
+                if (coords[0] == currentX && coords[1] == currentY) {
+                    throw new IllegalArgumentException("");
                 }
 
                 SCell referencedCell = sheet.get(coords[0], coords[1]);
-
-
-                String cellValue = (referencedCell != null && !referencedCell.getData().isEmpty())
+                String cellValue = (referencedCell != null)
                         ? referencedCell.evaluate(sheet, coords[0], coords[1], visited)
-                        : "ERR_Form";
+                        : "0";
+
+                if (cellValue.equals("ERR_CYCLE!!!")) {
+                    throw new IllegalArgumentException("");
+                }
 
                 result.append(cellValue);
+                i += cellName.length();
             } else {
                 result.append(c);
                 i++;
@@ -172,21 +192,37 @@ public class SCell implements Cell {
         return result.toString();
     }
 
-    private static double evaluateExpression(String expression) {
-        expression = expression.replaceAll("\\s", "");
-        return evaluateWithParentheses(expression);
+    private static String extractCellName(String formula, int startIndex) {
+        StringBuilder cellName = new StringBuilder();
+        cellName.append(formula.charAt(startIndex));
+        int i = startIndex + 1;
+
+        while (i < formula.length() && Character.isDigit(formula.charAt(i))) {
+            cellName.append(formula.charAt(i));
+            i++;
+        }
+
+        return cellName.toString().toUpperCase();
     }
 
-    private static double evaluateWithParentheses(String expression) {
+    private static double evaluateExpression(String expression) {
+        expression = expression.replaceAll("\\s", "");
+        return evaluateParentheses(expression);
+    }
+
+    private static double evaluateParentheses(String expression) {
         while (expression.contains("(")) {
             int openIndex = expression.lastIndexOf('(');
             int closeIndex = expression.indexOf(')', openIndex);
+
             if (closeIndex == -1) {
-                throw new IllegalArgumentException("Mismatched parentheses");
+                throw new IllegalArgumentException("");
             }
+
             double innerResult = evaluateWithoutParentheses(expression.substring(openIndex + 1, closeIndex));
             expression = expression.substring(0, openIndex) + innerResult + expression.substring(closeIndex + 1);
         }
+
         return evaluateWithoutParentheses(expression);
     }
 
@@ -195,62 +231,73 @@ public class SCell implements Cell {
         LinkedList<Character> operators = new LinkedList<>();
         StringBuilder currentNumber = new StringBuilder();
 
-        for (int i = 0; i <= expression.length(); i++) {
-            char c = (i < expression.length()) ? expression.charAt(i) : '\0';
+        // בדיקה אם הביטוי ריק
+        if (expression == null || expression.trim().isEmpty()) {
+            throw new IllegalArgumentException("");
+        }
 
-            if (Character.isDigit(c) || c == '.' || (c == '-' && (i == 0 || "+-*/".contains("" + expression.charAt(i - 1))))) {
-                currentNumber.append(c);
-            } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '\0') {
-                if (currentNumber.length() > 0) {
-                    numbers.add(Double.parseDouble(currentNumber.toString()));
-                    currentNumber.setLength(0);
+        try {
+            for (int i = 0; i <= expression.length(); i++) {
+                char c = (i < expression.length()) ? expression.charAt(i) : '\0';
+
+                if (Character.isDigit(c) || c == '.' || (c == '-' && (i == 0 || "+-*/".contains("" + expression.charAt(i - 1))))) {
+                    currentNumber.append(c);
+                } else if ("+-*/".indexOf(c) != -1 || c == '\0') {
+                    if (currentNumber.length() > 0) {
+                        numbers.add(Double.parseDouble(currentNumber.toString()));
+                        currentNumber.setLength(0);
+                    }
+
+                    while (!operators.isEmpty() && precedence(operators.getLast()) >= precedence(c)) {
+                        if (numbers.size() < 2) {
+                            throw new IllegalArgumentException("");
+                        }
+                        double b = numbers.removeLast();
+                        double a = numbers.removeLast();
+                        char op = operators.removeLast();
+                        numbers.add(applyOperator(a, op, b));
+                    }
+
+                    if (c != '\0') {
+                        operators.add(c);
+                    }
+                } else {
+                    throw new IllegalArgumentException(" " + c);
                 }
-                while (!operators.isEmpty() && precedence(operators.getLast()) >= precedence(c)) {
-                    double b = numbers.removeLast();
-                    double a = numbers.removeLast();
-                    char op = operators.removeLast();
-                    numbers.add(applyOperator(a, op, b));
-                }
-                if (c != '\0') operators.add(c);
-            } else {
-                throw new IllegalArgumentException("Invalid character in formula: " + c);
             }
-        }
 
-        while (!operators.isEmpty()) {
-            double b = numbers.removeLast();
-            double a = numbers.removeLast();
-            char op = operators.removeLast();
-            numbers.add(applyOperator(a, op, b));
-        }
+            if (numbers.isEmpty()) {
+                throw new IllegalArgumentException("");
+            }
 
-        return numbers.getLast();
+            return numbers.getFirst();
+        } catch (NoSuchElementException e) {
+            throw new IllegalArgumentException("");
+        }
     }
 
     private static int precedence(char operator) {
-        if (operator == '+' || operator == '-') return 1;
-        if (operator == '*' || operator == '/') return 2;
-        return -1;
+        return switch (operator) {
+            case '+', '-' -> 1;
+            case '*', '/' -> 2;
+            default -> -1;
+        };
     }
 
     private static double applyOperator(double a, char operator, double b) {
-        switch (operator) {
-            case '+':
-                return a + b;
-            case '-':
-                return a - b;
-            case '*':
-                return a * b;
-            case '/':
+        return switch (operator) {
+            case '+' -> a + b;
+            case '-' -> a - b;
+            case '*' -> a * b;
+            case '/' -> {
                 if (b == 0) {
-                    throw new ArithmeticException("Division by zero"); // חלוקה באפס
+                    throw new ArithmeticException("");
                 }
-                return a / b;
-            default:
-                throw new IllegalArgumentException("Unknown operator: " + operator);
-        }
+                yield a / b;
+            }
+            default -> throw new IllegalArgumentException(" " + operator);
+        };
     }
-
 
     @Override
     public String toString() {

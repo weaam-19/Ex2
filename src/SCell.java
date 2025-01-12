@@ -90,7 +90,7 @@ public class SCell implements Cell {
         };
     }
 
-    // Evaluates a formula and handles cell references
+    // Evaluates a formula and handles cell references.
     private String evaluateFormula(Ex2Sheet sheet, int currentX, int currentY, Set<String> visited) {
         String currentCell = getCellName(currentX, currentY);
 

@@ -2,7 +2,7 @@
 public class CellEntry implements Index2D {
     private final String index;
 
-    // Constructor: Initializes the CellEntry with the given index
+    // Constructor: Initializes the CellEntry with the given index.
     public CellEntry(String index) {
         this.index = index;
     }

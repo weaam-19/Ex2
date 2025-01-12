@@ -203,7 +203,7 @@ public class Ex2Sheet implements Sheet {
     /**
      * Saves the sheet's content to a file.
      * @param fileName the name of the file to save to
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs,
      */
     @Override
     public void save(String fileName) throws IOException {

@@ -11,6 +11,7 @@ This project is a fully functional spreadsheet application that allows users to:
 - **Error Handling:**
   - `ERR_FORM` for invalid formulas.
   - `ERR_CYCLE` for circular dependencies.
+
   - Division by zero detection.
 - **Graphical User Interface (GUI):** Intuitive interface for interacting with the spreadsheet.
 - **Saving and Loading:** Save the spreadsheet state to a file and reload it.
@@ -21,3 +22,8 @@ This project is a fully functional spreadsheet application that allows users to:
    ```bash
    git clone <repository-url>
    cd <project-folder>
+   Photo For the Spreadsheet
+   ![Image 11-01-2025 at 13 38](https://github.com/user-attachments/assets/8db4d530-b045-453a-aa5a-bf130fe0d052)
+
+    
+   

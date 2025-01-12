@@ -22,8 +22,7 @@ This project is a fully functional spreadsheet application that allows users to:
    ```bash
    git clone <repository-url>
    cd <project-folder>
-   Photo For the Spreadsheet
-   ![Image 11-01-2025 at 13 38](https://github.com/user-attachments/assets/8db4d530-b045-453a-aa5a-bf130fe0d052)
+
 
     
    

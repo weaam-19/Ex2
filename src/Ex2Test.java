@@ -78,8 +78,10 @@ public class Ex2Test {
         assertEquals("8.0", sheet.value(0,1 ));
 
         sheet.set(0, 0, "10");
-        assertEquals("13.0", sheet.value(0, 1));
+        assertEquals("13.0", sheet.value(0, 1
+        ));
     }
+
 
     @Test
     public void testDepthCalculation() {

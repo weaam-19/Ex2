@@ -24,7 +24,7 @@ This project is a fully functional spreadsheet application that allows users to:
    cd <project-folder>
 
    
-  ## Example of the SpreadSheet**
+  ## Example of the SpreadSheet
   
 <img width="1196" alt="F195FFDA-5534-48C8-AD7C-6EAADAEC30F2" src="https://github.com/user-attachments/assets/de320942-8548-43fb-a968-fa4839462043" />
 

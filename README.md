@@ -22,6 +22,8 @@ This project is a fully functional spreadsheet application that allows users to:
    ```bash
    git clone <repository-url>
    cd <project-folder>
+   ![Uploading F195FFDA-5534-48C8-AD7C-6EAADAEC30F2.png…]()
+
 
 
     
